@@ -14,6 +14,8 @@ function QuestionContent() {
   const [streak, setStreak] = useState(0);
   const [xp, setXp] = useState(0);
   const [answered, setAnswered] = useState<string[]>([]);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     fetchQuestion();
@@ -23,6 +25,7 @@ function QuestionContent() {
 
   async function fetchQuestion() {
     setLoading(true); setAnswer(null); setCorrect(null); setTimer(0);
+    setAiExplanation(null); setAiLoading(false);
     try {
       const { data, error } = await supabase.from("questions").select("*, topics(name_ru)").eq("is_active", true).limit(50);
       if (error) throw error;
@@ -57,6 +60,46 @@ function QuestionContent() {
     } catch (e) { console.error(e); }
   }
 
+  async function askAI() {
+    if (aiLoading || aiExplanation) return;
+    setAiLoading(true);
+
+    const options = typeof question.options === "string" ? JSON.parse(question.options) : question.options || [];
+    const correctAnswer = options[question.correct_index];
+    const userAnswer = options[answer!];
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{
+            role: "user",
+            content: `Ты AI-репетитор по ПДД Казахстана. Ученик ответил НЕПРАВИЛЬНО на вопрос. Объясни простым языком почему правильный ответ именно такой. Будь дружелюбным, используй примеры из реальной жизни. Отвечай на русском, коротко (3-5 предложений).
+
+Тема: ${question.topics?.name_ru || "ПДД"}
+Вопрос: ${question.text_ru}
+Ученик ответил: "${userAnswer}" (неправильно)
+Правильный ответ: "${correctAnswer}"
+${question.explanation_ru ? `Краткое пояснение: ${question.explanation_ru}` : ""}
+
+Объясни подробно и понятно:`
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content?.map((item: any) => item.text || "").join("") || "Не удалось получить объяснение";
+      setAiExplanation(text);
+    } catch (e) {
+      console.error(e);
+      setAiExplanation("Ошибка подключения к AI. Попробуй позже.");
+    }
+    setAiLoading(false);
+  }
+
   if (loading && !question) return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80vh" }}><div style={{ fontSize: 48, animation: "bob 1.5s ease-in-out infinite" }}>{"\u{1F9E0}"}</div></div>;
   if (!question) return <div style={{ textAlign: "center", marginTop: 80 }}><p style={{ fontSize: 20, fontWeight: 800, color: "var(--ink)" }}>Нет вопросов</p><button onClick={() => router.back()} style={{ marginTop: 16, color: "var(--jade)", fontWeight: 700, background: "none", border: "none", fontSize: 16 }}>Назад</button></div>;
 
@@ -65,7 +108,6 @@ function QuestionContent() {
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "var(--bg)", overflow: "auto" }}>
-      {/* Ambient */}
       <div style={{ position: "absolute", top: -60, right: -40, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, var(--jade-g) 0%, transparent 70%)", opacity: 0.5, pointerEvents: "none" }} />
 
       <div style={{ maxWidth: 430, margin: "0 auto", padding: "20px 20px 40px", position: "relative", zIndex: 1 }}>
@@ -90,12 +132,12 @@ function QuestionContent() {
           <div style={{ height: "100%", width: `${Math.min((total / 50) * 100, 100)}%`, borderRadius: 3, background: "linear-gradient(90deg, var(--jade), var(--royal))", transition: "width 0.8s" }} />
         </div>
 
-        {/* Topic tag */}
+        {/* Topic */}
         <span style={{ background: "var(--jade-g)", color: "var(--jade)", fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 10, display: "inline-block", marginBottom: 12 }}>
           {question.topics?.name_ru || "PDD"}
         </span>
 
-        {/* Question card */}
+        {/* Question */}
         <div className="animate-in" style={{ background: "var(--card)", borderRadius: 24, padding: 24, marginBottom: 16, border: "1px solid var(--line)" }}>
           <p style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", lineHeight: 1.55, fontFamily: "'Outfit', sans-serif" }}>{question.text_ru}</p>
         </div>
@@ -132,18 +174,73 @@ function QuestionContent() {
               border: `1px solid ${correct ? "rgba(24,136,94,0.2)" : "rgba(200,62,62,0.2)"}`,
             }}>
               <p style={{ fontSize: 18, fontWeight: 900, color: correct ? "var(--forest)" : "var(--ruby)" }}>
-                {correct ? "Правильно! \u{1F389}" : "Неверно \u{1F614}"}
+                {correct ? "\u041F\u0440\u0430\u0432\u0438\u043B\u044C\u043D\u043E! \u{1F389}" : "\u041D\u0435\u0432\u0435\u0440\u043D\u043E \u{1F614}"}
               </p>
               {correct && <p style={{ fontSize: 13, fontWeight: 700, color: "var(--forest)", marginTop: 4 }}>+10 XP</p>}
             </div>
 
+            {/* Standard explanation */}
             {question.explanation_ru && (
-              <div style={{ background: "var(--royal-g)", borderRadius: 20, padding: 18, marginBottom: 16, border: "1px solid rgba(88,64,198,0.08)" }}>
+              <div style={{ background: "var(--royal-g)", borderRadius: 20, padding: 18, marginBottom: 12, border: "1px solid rgba(88,64,198,0.08)" }}>
                 <p style={{ fontSize: 12, fontWeight: 800, color: "var(--royal)", marginBottom: 6 }}>{"\u{1F4A1}"} Объяснение</p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: "var(--mid)", lineHeight: 1.6 }}>{question.explanation_ru}</p>
               </div>
             )}
 
+            {/* AI button - only on wrong answer */}
+            {!correct && !aiExplanation && (
+              <button className="hover-lift" onClick={askAI} disabled={aiLoading} style={{
+                width: "100%", padding: 16, borderRadius: 18, border: "none", marginBottom: 12,
+                background: aiLoading
+                  ? "var(--dim)"
+                  : "linear-gradient(135deg, var(--royal), #6C3CE0)",
+                color: "white", fontWeight: 800, fontSize: 14,
+                fontFamily: "'Outfit', sans-serif", cursor: aiLoading ? "default" : "pointer",
+                boxShadow: aiLoading ? "none" : "0 8px 24px rgba(88,64,198,0.35)",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              }}>
+                {aiLoading ? (
+                  <>
+                    <span style={{ animation: "bob 1s ease-in-out infinite", fontSize: 18 }}>{"\u{1F916}"}</span>
+                    <span>AI думает...</span>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: 18 }}>{"\u{1F916}"}</span>
+                    <span>Объясни подробнее с AI</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* AI explanation */}
+            {aiExplanation && (
+              <div className="animate-in" style={{
+                background: "linear-gradient(135deg, rgba(88,64,198,0.06), rgba(26,122,104,0.04))",
+                borderRadius: 22, padding: 20, marginBottom: 12,
+                border: "2px solid rgba(88,64,198,0.12)",
+                position: "relative", overflow: "hidden",
+              }}>
+                <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, borderRadius: "50%", background: "rgba(88,64,198,0.05)", pointerEvents: "none" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, position: "relative" }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 12,
+                    background: "linear-gradient(135deg, var(--royal), #6C3CE0)",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
+                    boxShadow: "0 4px 12px rgba(88,64,198,0.3)",
+                  }}>{"\u{1F916}"}</div>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 800, color: "var(--royal)" }}>AI Тьютор</p>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--pale)" }}>Персональное объяснение</p>
+                  </div>
+                </div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", lineHeight: 1.7, position: "relative" }}>
+                  {aiExplanation}
+                </p>
+              </div>
+            )}
+
+            {/* Next button */}
             <button className="hover-lift" onClick={fetchQuestion} style={{
               width: "100%", padding: 16, borderRadius: 18, border: "none",
               background: "linear-gradient(135deg, var(--jade), var(--royal))",

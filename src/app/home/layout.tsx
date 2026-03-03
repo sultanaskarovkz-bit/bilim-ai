@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { supabase, callFunction } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/stores/appStore";
 
 const NAV = [
@@ -18,12 +18,27 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const { isLoading, setUser, setProfile, setLoading } = useAppStore();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) { router.replace("/login"); return; }
       setUser(session.user);
-      callFunction("get-daily-state", {}).then(d => setProfile({ ...d.profile, loaded: true })).catch(() => setLoading(false));
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+        if (profile) {
+          setProfile({ ...profile, loaded: true });
+        } else {
+          setLoading(false);
+        }
+      } catch {
+        setLoading(false);
+      }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_OUT") router.replace("/login"); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((ev) => {
+      if (ev === "SIGNED_OUT") router.replace("/login");
+    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -35,7 +50,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/95 backdrop-blur-lg border-t border-slate-100 px-2 pb-5 pt-2 z-50">
         <div className="flex justify-around">
           {NAV.map((item) => {
-            const active = pathname === item.href || (item.href === "/home" && pathname === "/home");
+            const active = pathname === item.href;
             return (
               <button key={item.href} onClick={() => router.push(item.href)}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all ${active ? "text-purple-600" : "text-slate-400"}`}>

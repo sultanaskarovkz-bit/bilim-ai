@@ -20,7 +20,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#7c3aed",
+  themeColor: "#1A7A68",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -28,9 +28,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ru">
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className={nunito.className}>
-        <div className="max-w-[430px] mx-auto min-h-screen relative bg-white shadow-xl lg:my-4 lg:rounded-3xl lg:min-h-[calc(100vh-2rem)] lg:border lg:border-slate-200">{children}</div>
+        <div className="max-w-[430px] mx-auto min-h-screen relative lg:my-4 lg:rounded-[36px] lg:overflow-hidden lg:shadow-2xl" style={{ background: "var(--bg)" }}>
+          {children}
+        </div>
       </body>
     </html>
   );

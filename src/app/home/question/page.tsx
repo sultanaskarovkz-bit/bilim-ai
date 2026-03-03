@@ -22,28 +22,16 @@ function QuestionContent() {
   }, []);
 
   async function fetchQuestion() {
-    setLoading(true);
-    setAnswer(null);
-    setCorrect(null);
-    setTimer(0);
+    setLoading(true); setAnswer(null); setCorrect(null); setTimer(0);
     try {
-      const { data, error } = await supabase
-        .from("questions")
-        .select("*, topics(name_ru)")
-        .eq("is_active", true)
-        .limit(50);
+      const { data, error } = await supabase.from("questions").select("*, topics(name_ru)").eq("is_active", true).limit(50);
       if (error) throw error;
       if (data && data.length > 0) {
         const available = data.filter(q => !answered.includes(q.id));
         const pool = available.length > 0 ? available : data;
-        const random = pool[Math.floor(Math.random() * pool.length)];
-        setQuestion(random);
-      } else {
-        setQuestion(null);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+        setQuestion(pool[Math.floor(Math.random() * pool.length)]);
+      } else { setQuestion(null); }
+    } catch (e) { console.error(e); }
     setLoading(false);
   }
 
@@ -69,45 +57,110 @@ function QuestionContent() {
     } catch (e) { console.error(e); }
   }
 
-  if (loading && !question) return <div className="text-center mt-20 text-4xl animate-pulse"></div>;
-  if (!question) return <div className="text-center mt-20"><p className="text-xl font-bold">Нет вопросов</p><button onClick={() => router.back()} className="mt-4 text-purple-600 font-bold">Назад</button></div>;
+  if (loading && !question) return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80vh" }}><div style={{ fontSize: 48, animation: "bob 1.5s ease-in-out infinite" }}>{"\u{1F9E0}"}</div></div>;
+  if (!question) return <div style={{ textAlign: "center", marginTop: 80 }}><p style={{ fontSize: 20, fontWeight: 800, color: "var(--ink)" }}>Нет вопросов</p><button onClick={() => router.back()} style={{ marginTop: 16, color: "var(--jade)", fontWeight: 700, background: "none", border: "none", fontSize: 16 }}>Назад</button></div>;
 
   const options = typeof question.options === "string" ? JSON.parse(question.options) : question.options || [];
+  const total = answered.length;
 
   return (
-    <div className="fixed inset-0 z-50 bg-gradient-to-br from-slate-50 to-purple-50/30 overflow-auto">
-      <div className="max-w-[430px] mx-auto px-5 py-4 pb-10">
-        <div className="flex justify-between items-center mb-5">
-          <button onClick={() => router.back()} className="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center text-slate-400 font-bold"></button>
-          <div className="bg-white px-3 py-1.5 rounded-xl shadow text-sm font-bold text-purple-600">{Math.floor(timer/60)}:{(timer%60).toString().padStart(2,"0")}</div>
-          <div className="flex gap-2">
-            {streak > 0 && <div className="bg-orange-50 px-3 py-1.5 rounded-xl text-sm font-bold text-orange-500">{streak}</div>}
-            <div className="bg-purple-50 px-3 py-1.5 rounded-xl text-sm font-bold text-purple-600">+{xp} XP</div>
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "var(--bg)", overflow: "auto" }}>
+      {/* Ambient */}
+      <div style={{ position: "absolute", top: -60, right: -40, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, var(--jade-g) 0%, transparent 70%)", opacity: 0.5, pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 430, margin: "0 auto", padding: "20px 20px 40px", position: "relative", zIndex: 1 }}>
+        {/* Top bar */}
+        <div className="animate-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <button className="hover-lift" onClick={() => router.back()} style={{
+            width: 42, height: 42, borderRadius: 14, background: "var(--card)",
+            border: "1px solid var(--line)", fontSize: 16, color: "var(--mid)",
+            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          }}>{"\u2715"}</button>
+          <div style={{ background: "var(--card)", padding: "7px 16px", borderRadius: 12, fontSize: 14, fontWeight: 800, color: "var(--royal)", border: "1px solid var(--line)" }}>
+            {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {streak > 0 && <div style={{ background: "var(--ruby-g)", padding: "6px 10px", borderRadius: 10, fontSize: 12, fontWeight: 800, color: "var(--ruby)" }}>{"\u{1F525}"}{streak}</div>}
+            <div style={{ background: "var(--jade-g)", padding: "6px 10px", borderRadius: 10, fontSize: 12, fontWeight: 800, color: "var(--jade)" }}>+{xp}</div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
-          <p className="text-xs font-bold text-purple-400 mb-2">{question.topics?.name_ru || "PDD"}</p>
-          <p className="text-base font-bold text-slate-800 leading-relaxed">{question.text_ru}</p>
+
+        {/* Progress */}
+        <div style={{ height: 5, background: "var(--dim)", borderRadius: 3, marginBottom: 22, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${Math.min((total / 50) * 100, 100)}%`, borderRadius: 3, background: "linear-gradient(90deg, var(--jade), var(--royal))", transition: "width 0.8s" }} />
         </div>
-        <div className="space-y-2.5 mb-4">
+
+        {/* Topic tag */}
+        <span style={{ background: "var(--jade-g)", color: "var(--jade)", fontSize: 11, fontWeight: 700, padding: "5px 14px", borderRadius: 10, display: "inline-block", marginBottom: 12 }}>
+          {question.topics?.name_ru || "PDD"}
+        </span>
+
+        {/* Question card */}
+        <div className="animate-in" style={{ background: "var(--card)", borderRadius: 24, padding: 24, marginBottom: 16, border: "1px solid var(--line)" }}>
+          <p style={{ fontSize: 17, fontWeight: 800, color: "var(--ink)", lineHeight: 1.55, fontFamily: "'Outfit', sans-serif" }}>{question.text_ru}</p>
+        </div>
+
+        {/* Options */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
           {options.map((opt: string, i: number) => {
-            let cls = "bg-white border-transparent text-slate-700";
+            let bg = "var(--card)", bd = "var(--line)", tc = "var(--ink)", ib = "var(--dim)", ic = "var(--mid)";
             if (answer !== null) {
-              if (i === question.correct_index) cls = "bg-green-50 border-green-400 text-green-700";
-              else if (i === answer && !correct) cls = "bg-red-50 border-red-400 text-red-700";
+              if (i === question.correct_index) { bg = "var(--forest-g)"; bd = "var(--forest)"; tc = "var(--forest)"; ib = "var(--forest)"; ic = "white"; }
+              else if (i === answer && !correct) { bg = "var(--ruby-g)"; bd = "var(--ruby)"; tc = "var(--ruby)"; ib = "var(--ruby)"; ic = "white"; }
             }
-            return (<button key={i} onClick={() => submitAnswer(i)} disabled={answer !== null} className={`w-full p-4 rounded-2xl border-2 text-left font-semibold text-sm shadow-sm transition-all ${cls}`}>{String.fromCharCode(65+i)}. {opt}</button>);
+            return (
+              <button key={i} className="hover-lift" onClick={() => submitAnswer(i)} disabled={answer !== null} style={{
+                background: bg, border: `2px solid ${bd}`, borderRadius: 18, padding: "14px 16px",
+                textAlign: "left", display: "flex", alignItems: "center", gap: 14,
+                fontFamily: "'Nunito', sans-serif", cursor: answer !== null ? "default" : "pointer",
+              }}>
+                <div style={{ width: 34, height: 34, borderRadius: 11, background: ib, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: ic, transition: "all 0.3s" }}>
+                  {String.fromCharCode(65 + i)}
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: tc }}>{opt}</span>
+              </button>
+            );
           })}
         </div>
-        {answer !== null && (<div className={`rounded-2xl p-4 mb-4 text-center ${correct ? "bg-green-100" : "bg-red-50"}`}><p className="text-lg font-black">{correct ? "Правильно! " : "Неверно "}</p>{correct && <p className="text-sm font-bold mt-1">+10 XP</p>}</div>)}
-        {answer !== null && question.explanation_ru && (<div className="bg-blue-50 rounded-2xl p-4 mb-4"><p className="text-sm font-bold text-blue-800 mb-2">Объяснение </p><p className="text-sm text-blue-700 leading-relaxed">{question.explanation_ru}</p></div>)}
-        {answer !== null && (<button onClick={fetchQuestion} className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold text-base shadow-lg">Следующий вопрос </button>)}
-        <p className="text-center text-xs text-slate-400 mt-4">Решено: {answered.length} | Серия: {streak}</p>
+
+        {/* Result */}
+        {answer !== null && (
+          <div className="animate-in">
+            <div style={{
+              background: correct ? "var(--forest-g)" : "var(--ruby-g)",
+              borderRadius: 20, padding: 18, textAlign: "center", marginBottom: 12,
+              border: `1px solid ${correct ? "rgba(24,136,94,0.2)" : "rgba(200,62,62,0.2)"}`,
+            }}>
+              <p style={{ fontSize: 18, fontWeight: 900, color: correct ? "var(--forest)" : "var(--ruby)" }}>
+                {correct ? "Правильно! \u{1F389}" : "Неверно \u{1F614}"}
+              </p>
+              {correct && <p style={{ fontSize: 13, fontWeight: 700, color: "var(--forest)", marginTop: 4 }}>+10 XP</p>}
+            </div>
+
+            {question.explanation_ru && (
+              <div style={{ background: "var(--royal-g)", borderRadius: 20, padding: 18, marginBottom: 16, border: "1px solid rgba(88,64,198,0.08)" }}>
+                <p style={{ fontSize: 12, fontWeight: 800, color: "var(--royal)", marginBottom: 6 }}>{"\u{1F4A1}"} Объяснение</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--mid)", lineHeight: 1.6 }}>{question.explanation_ru}</p>
+              </div>
+            )}
+
+            <button className="hover-lift" onClick={fetchQuestion} style={{
+              width: "100%", padding: 16, borderRadius: 18, border: "none",
+              background: "linear-gradient(135deg, var(--jade), var(--royal))",
+              color: "white", fontWeight: 800, fontSize: 15, fontFamily: "'Outfit', sans-serif",
+              boxShadow: "0 8px 24px rgba(26,122,104,0.35)", cursor: "pointer",
+            }}>Следующий вопрос {"\u2192"}</button>
+          </div>
+        )}
+
+        <p style={{ textAlign: "center", fontSize: 12, color: "var(--pale)", marginTop: 16, fontWeight: 600 }}>
+          Решено: {total} | Серия: {streak}
+        </p>
       </div>
     </div>
   );
 }
 
 export default function QuestionPage() {
-  return (<Suspense fallback={<div className="text-center mt-20 text-4xl animate-pulse"></div>}><QuestionContent /></Suspense>);
+  return (<Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}><div style={{ fontSize: 48, animation: "bob 1.5s ease-in-out infinite" }}>{"\u{1F9E0}"}</div></div>}><QuestionContent /></Suspense>);
 }

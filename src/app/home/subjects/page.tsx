@@ -8,56 +8,71 @@ export default function SubjectsPage() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSubjects();
-  }, []);
+  useEffect(() => { loadSubjects(); }, []);
 
   async function loadSubjects() {
-    const { data } = await supabase
-      .from("subjects")
-      .select("*, topics(id, name_ru)")
-      .eq("is_active", true)
-      .order("sort_order");
-    if (data) {
-      setSubjects(data);
-      if (data.length > 0) setSelected(data[0].exam);
-    }
+    const { data } = await supabase.from("subjects").select("*, topics(id, name_ru)").eq("is_active", true).order("sort_order");
+    if (data) { setSubjects(data); if (data.length > 0) setSelected(data[0].exam); }
   }
+
+  const colors = ["var(--jade)", "var(--saffron)", "var(--royal)", "var(--ruby)"];
 
   return (
     <div>
-      <h1 className="text-xl font-black text-slate-800 mb-5">Предметы</h1>
+      <h1 className="animate-in" style={{ fontFamily: "'Fraunces', serif", fontSize: 28, color: "var(--ink)", fontWeight: 900, marginBottom: 20 }}>Предметы</h1>
 
-      <div className="flex gap-2 mb-5 overflow-x-auto pb-2">
-        {subjects.map((s) => (
-          <button key={s.id} onClick={() => setSelected(s.exam)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap ${selected === s.exam ? "bg-purple-600 text-white shadow" : "bg-white text-slate-600 shadow-sm"}`}>
-            {s.icon || "📚"} {s.name_ru}
+      <div className="animate-in" style={{ display: "flex", gap: 8, marginBottom: 20, overflowX: "auto", paddingBottom: 4, animationDelay: "0.04s" }}>
+        {subjects.map((s, i) => (
+          <button key={s.id} className="hover-lift" onClick={() => setSelected(s.exam)} style={{
+            background: selected === s.exam ? "linear-gradient(135deg, var(--jade), var(--royal))" : "var(--card)",
+            color: selected === s.exam ? "white" : "var(--mid)",
+            border: selected === s.exam ? "none" : "1px solid var(--line)",
+            borderRadius: 14, padding: "10px 22px", fontSize: 13, fontWeight: 800,
+            fontFamily: "'Outfit', sans-serif", whiteSpace: "nowrap",
+            boxShadow: selected === s.exam ? "0 4px 16px rgba(26,122,104,0.3)" : "none",
+          }}>
+            {s.icon || "\u{1F4DA}"} {s.name_ru}
           </button>
         ))}
       </div>
 
       {subjects.filter(s => s.exam === selected).map(s => (
-        <div key={s.id} className="bg-white rounded-2xl p-5 shadow-sm mb-4">
-          <h2 className="font-bold text-slate-800 mb-3">{s.icon || "📚"} {s.name_ru}</h2>
-          <div className="space-y-2 mb-4">
-            {(s.topics || []).map((t: any) => (
-              <div key={t.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                <div className="w-2 h-2 rounded-full bg-purple-400"></div>
-                <p className="text-sm font-semibold text-slate-600">{t.name_ru}</p>
+        <div key={s.id}>
+          {(s.topics || []).map((t: any, i: number) => (
+            <div key={t.id} className="hover-lift animate-in" style={{
+              background: "var(--card)", borderRadius: 22, padding: "16px 18px", marginBottom: 10,
+              border: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 14,
+              animationDelay: `${0.06 + i * 0.04}s`,
+            }}>
+              <div style={{
+                width: 50, height: 50, borderRadius: 17,
+                background: `${colors[i % colors.length]}12`,
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
+              }}>
+                {["\u{1F6B8}", "\u{1F4CB}", "\u{1F500}", "\u26A1", "\u{1F6E3}\uFE0F", "\u{1F6A6}", "\u{1F6E1}\uFE0F", "\u{1F4B0}"][i] || "\u{1F4DA}"}
               </div>
-            ))}
-          </div>
-          <button onClick={() => router.push("/home/question?exam=" + s.exam)}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold shadow-lg">
-            Начать тренировку
-          </button>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 14, fontWeight: 800, color: "var(--ink)" }}>{t.name_ru}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
+                  <div style={{ flex: 1, height: 5, background: "var(--dim)", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: "0%", borderRadius: 3, background: colors[i % colors.length] }} />
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--pale)" }}>0%</span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button className="hover-lift" onClick={() => router.push("/home/question?exam=" + s.exam)} style={{
+            width: "100%", padding: 16, borderRadius: 18, border: "none", marginTop: 6,
+            background: "linear-gradient(135deg, var(--jade), var(--royal))",
+            color: "white", fontWeight: 800, fontSize: 15, fontFamily: "'Outfit', sans-serif",
+            boxShadow: "0 8px 24px rgba(26,122,104,0.35)", cursor: "pointer",
+          }}>Начать тренировку</button>
         </div>
       ))}
 
-      {subjects.length === 0 && (
-        <p className="text-center text-slate-400 mt-10">Загрузка предметов...</p>
-      )}
+      {subjects.length === 0 && <p style={{ textAlign: "center", color: "var(--pale)", marginTop: 40 }}>Загрузка...</p>}
     </div>
   );
 }

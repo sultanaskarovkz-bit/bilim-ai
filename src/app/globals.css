@@ -2,6 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { --purple: #6C5CE7; --green: #00B894; --orange: #F59E0B; }
-body { background: linear-gradient(135deg, #F8F7FF 0%, #F0EFFF 50%, #F0F9FF 100%); min-height: 100vh; }
-* { -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #F7F0E3;
+  --card: #FFFDF7;
+  --raised: #FFF9EE;
+  --dim: #EDE5D4;
+  --line: #E4DBC8;
+  --jade: #1A7A68;
+  --jade-d: #0E5B4C;
+  --jade-g: #D6F1EA;
+  --saffron: #D48B1A;
+  --saffron-d: #A86E10;
+  --saffron-g: #FEE9C2;
+  --royal: #5840C6;
+  --royal-d: #3C2B90;
+  --royal-g: #E5E0FA;
+  --ruby: #C83E3E;
+  --ruby-g: #FCDCDC;
+  --forest: #18885E;
+  --forest-g: #D2F3E4;
+  --gold-a: #F7D24A;
+  --gold-b: #D4A710;
+  --gold-g: #FFF5D4;
+  --ink: #1A152C;
+  --mid: #524A68;
+  --pale: #9A90B0;
+  --ghost: #C8C0D8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #E0D8C6;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes sweep {
+  0% { left: -120%; }
+  100% { left: 220%; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-in {
+  animation: slideUp 0.5s cubic-bezier(0.22, 0.68, 0, 1) both;
+}
+
+.hover-lift {
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.hover-lift:active {
+  transform: scale(0.97);
+}

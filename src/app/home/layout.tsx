@@ -1,15 +1,15 @@
-"use client";
+﻿"use client";
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAppStore } from "@/stores/appStore";
 
 const NAV = [
-  { href: "/home", icon: "🏠", label: "Главная" },
-  { href: "/home/subjects", icon: "📚", label: "Предметы" },
-  { href: "/home/rating", icon: "🏆", label: "Рейтинг" },
-  { href: "/home/ai", icon: "🤖", label: "AI" },
-  { href: "/home/profile", icon: "👤", label: "Профиль" },
+  { href: "/home", icon: "\u{1F3E0}", label: "\u0413\u043B\u0430\u0432\u043D\u0430\u044F" },
+  { href: "/home/subjects", icon: "\u{1F4DA}", label: "\u041F\u0440\u0435\u0434\u043C\u0435\u0442\u044B" },
+  { href: "/home/rating", icon: "\u{1F3C6}", label: "\u0420\u0435\u0439\u0442\u0438\u043D\u0433" },
+  { href: "/home/ai", icon: "\u{1F916}", label: "AI" },
+  { href: "/home/profile", icon: "\u{1F464}", label: "\u041F\u0440\u043E\u0444\u0438\u043B\u044C" },
 ];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -22,27 +22,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       if (!session?.user) { router.replace("/login"); return; }
       setUser(session.user);
       try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        if (profile) {
-          setProfile({ ...profile, loaded: true });
-        } else {
-          setLoading(false);
-        }
-      } catch {
-        setLoading(false);
-      }
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+        if (profile) { setProfile({ ...profile, loaded: true }); }
+        else { setLoading(false); }
+      } catch { setLoading(false); }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((ev) => {
-      if (ev === "SIGNED_OUT") router.replace("/login");
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_OUT") router.replace("/login"); });
     return () => subscription.unsubscribe();
   }, []);
 
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><div className="text-5xl animate-pulse">🧠</div></div>;
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen"><div className="text-5xl animate-pulse">&#x1F9E0;</div></div>;
 
   return (
     <>

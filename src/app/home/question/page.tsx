@@ -81,23 +81,13 @@ function QuestionContent() {
       const data = await res.json();
       setAiExplanation(data.text);
     } catch (e) {
-      setAiExplanation("Ошибка подключения к AI. Попробуй позже.");
-    }
-    setAiLoading(false);
-  };
-
-      const data = await response.json();
-      const text = data.content?.map((item: any) => item.text || "").join("") || "Не удалось получить объяснение";
-      setAiExplanation(text);
-    } catch (e) {
-      console.error(e);
-      setAiExplanation("Ошибка подключения к AI. Попробуй позже.");
+      setAiExplanation("\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u043A AI. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 \u043F\u043E\u0437\u0436\u0435.");
     }
     setAiLoading(false);
   }
 
   if (loading && !question) return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80vh" }}><div style={{ fontSize: 48, animation: "bob 1.5s ease-in-out infinite" }}>{"\u{1F9E0}"}</div></div>;
-  if (!question) return <div style={{ textAlign: "center", marginTop: 80 }}><p style={{ fontSize: 20, fontWeight: 800, color: "var(--ink)" }}>Нет вопросов</p><button onClick={() => router.back()} style={{ marginTop: 16, color: "var(--jade)", fontWeight: 700, background: "none", border: "none", fontSize: 16 }}>Назад</button></div>;
+  if (!question) return <div style={{ textAlign: "center", marginTop: 80 }}><p style={{ fontSize: 20, fontWeight: 800, color: "var(--ink)" }}>{"\u041D\u0435\u0442 \u0432\u043E\u043F\u0440\u043E\u0441\u043E\u0432"}</p><button onClick={() => router.back()} style={{ marginTop: 16, color: "var(--jade)", fontWeight: 700, background: "none", border: "none", fontSize: 16 }}>{"\u041D\u0430\u0437\u0430\u0434"}</button></div>;
 
   const options = typeof question.options === "string" ? JSON.parse(question.options) : question.options || [];
   const total = answered.length;
@@ -178,7 +168,7 @@ function QuestionContent() {
             {/* Standard explanation */}
             {question.explanation_ru && (
               <div style={{ background: "var(--royal-g)", borderRadius: 20, padding: 18, marginBottom: 12, border: "1px solid rgba(88,64,198,0.08)" }}>
-                <p style={{ fontSize: 12, fontWeight: 800, color: "var(--royal)", marginBottom: 6 }}>{"\u{1F4A1}"} Объяснение</p>
+                <p style={{ fontSize: 12, fontWeight: 800, color: "var(--royal)", marginBottom: 6 }}>{"\u{1F4A1}"} {"\u041E\u0431\u044A\u044F\u0441\u043D\u0435\u043D\u0438\u0435"}</p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: "var(--mid)", lineHeight: 1.6 }}>{question.explanation_ru}</p>
               </div>
             )}
@@ -198,12 +188,12 @@ function QuestionContent() {
                 {aiLoading ? (
                   <>
                     <span style={{ animation: "bob 1s ease-in-out infinite", fontSize: 18 }}>{"\u{1F916}"}</span>
-                    <span>AI думает...</span>
+                    <span>AI {"\u0434\u0443\u043C\u0430\u0435\u0442"}...</span>
                   </>
                 ) : (
                   <>
                     <span style={{ fontSize: 18 }}>{"\u{1F916}"}</span>
-                    <span>Объясни подробнее с AI</span>
+                    <span>{"\u041E\u0431\u044A\u044F\u0441\u043D\u0438 \u043F\u043E\u0434\u0440\u043E\u0431\u043D\u0435\u0435 \u0441 AI"}</span>
                   </>
                 )}
               </button>
@@ -226,8 +216,8 @@ function QuestionContent() {
                     boxShadow: "0 4px 12px rgba(88,64,198,0.3)",
                   }}>{"\u{1F916}"}</div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: "var(--royal)" }}>AI Тьютор</p>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--pale)" }}>Персональное объяснение</p>
+                    <p style={{ fontSize: 13, fontWeight: 800, color: "var(--royal)" }}>AI {"\u0422\u044C\u044E\u0442\u043E\u0440"}</p>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--pale)" }}>{"\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u0431\u044A\u044F\u0441\u043D\u0435\u043D\u0438\u0435"}</p>
                   </div>
                 </div>
                 <p style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", lineHeight: 1.7, position: "relative" }}>
@@ -242,12 +232,12 @@ function QuestionContent() {
               background: "linear-gradient(135deg, var(--jade), var(--royal))",
               color: "white", fontWeight: 800, fontSize: 15, fontFamily: "'Outfit', sans-serif",
               boxShadow: "0 8px 24px rgba(26,122,104,0.35)", cursor: "pointer",
-            }}>Следующий вопрос {"\u2192"}</button>
+            }}>{"\u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0432\u043E\u043F\u0440\u043E\u0441"} {"\u2192"}</button>
           </div>
         )}
 
         <p style={{ textAlign: "center", fontSize: 12, color: "var(--pale)", marginTop: 16, fontWeight: 600 }}>
-          Решено: {total} | Серия: {streak}
+          {"\u0420\u0435\u0448\u0435\u043D\u043E"}: {total} | {"\u0421\u0435\u0440\u0438\u044F"}: {streak}
         </p>
       </div>
     </div>

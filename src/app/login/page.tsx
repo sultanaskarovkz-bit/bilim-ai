@@ -54,11 +54,11 @@ export default function LoginPage() {
   }
 
   async function googleLogin() {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + "/login?step=name" },
-    });
-  }
+  await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.origin + "/auth/callback" },
+  });
+}
 
   return (
     <div className="min-h-screen px-6 py-10 flex flex-col">

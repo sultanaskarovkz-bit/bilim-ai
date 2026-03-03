@@ -7,11 +7,21 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
+    const handleAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
       if (session) {
         router.replace("/home");
+        return;
       }
-    });
+      // Listen for auth changes (hash fragment)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          subscription.unsubscribe();
+          router.replace("/home");
+        }
+      });
+    };
+    handleAuth();
   }, [router]);
 
   return (

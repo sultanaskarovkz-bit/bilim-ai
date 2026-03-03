@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className={nunito.className}>
-        <div className="max-w-[430px] mx-auto min-h-screen relative">{children}</div>
+        <div className="max-w-[430px] mx-auto min-h-screen relative bg-white shadow-xl lg:my-4 lg:rounded-3xl lg:min-h-[calc(100vh-2rem)] lg:border lg:border-slate-200">{children}</div>
       </body>
     </html>
   );

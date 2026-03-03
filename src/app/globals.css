@@ -2,26 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
+:root { --purple: #6C5CE7; --green: #00B894; --orange: #F59E0B; }
+body { background: linear-gradient(135deg, #F8F7FF 0%, #F0EFFF 50%, #F0F9FF 100%); min-height: 100vh; }
+* { -webkit-tap-highlight-color: transparent; }

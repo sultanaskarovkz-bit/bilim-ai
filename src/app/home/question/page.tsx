@@ -64,31 +64,27 @@ function QuestionContent() {
     if (aiLoading || aiExplanation) return;
     setAiLoading(true);
 
-    const options = typeof question.options === "string" ? JSON.parse(question.options) : question.options || [];
-    const correctAnswer = options[question.correct_index];
-    const userAnswer = options[answer!];
+    const opts = typeof question.options === "string" ? JSON.parse(question.options) : question.options || [];
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/ai-explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: `Ты AI-репетитор по ПДД Казахстана. Ученик ответил НЕПРАВИЛЬНО на вопрос. Объясни простым языком почему правильный ответ именно такой. Будь дружелюбным, используй примеры из реальной жизни. Отвечай на русском, коротко (3-5 предложений).
-
-Тема: ${question.topics?.name_ru || "ПДД"}
-Вопрос: ${question.text_ru}
-Ученик ответил: "${userAnswer}" (неправильно)
-Правильный ответ: "${correctAnswer}"
-${question.explanation_ru ? `Краткое пояснение: ${question.explanation_ru}` : ""}
-
-Объясни подробно и понятно:`
-          }]
+          question: question.text_ru,
+          userAnswer: opts[answer!],
+          correctAnswer: opts[question.correct_index],
+          topic: question.topics?.name_ru || "PDD",
+          explanation: question.explanation_ru || "",
         })
       });
+      const data = await res.json();
+      setAiExplanation(data.text);
+    } catch (e) {
+      setAiExplanation("Ошибка подключения к AI. Попробуй позже.");
+    }
+    setAiLoading(false);
+  };
 
       const data = await response.json();
       const text = data.content?.map((item: any) => item.text || "").join("") || "Не удалось получить объяснение";

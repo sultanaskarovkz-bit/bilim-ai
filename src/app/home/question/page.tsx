@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -16,6 +16,8 @@ function QuestionContent() {
   const [answered, setAnswered] = useState<string[]>([]);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const aiRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchQuestion();
@@ -23,9 +25,20 @@ function QuestionContent() {
     return () => clearInterval(iv);
   }, []);
 
+  // Smooth scroll to AI when it appears
+  useEffect(() => {
+    if (aiExplanation && aiRef.current) {
+      setTimeout(() => {
+        aiRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [aiExplanation]);
+
   async function fetchQuestion() {
     setLoading(true); setAnswer(null); setCorrect(null); setTimer(0);
     setAiExplanation(null); setAiLoading(false);
+    // Scroll to top on new question
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
     try {
       const { data, error } = await supabase.from("questions").select("*, topics(name_ru)").eq("is_active", true).limit(50);
       if (error) throw error;
@@ -60,6 +73,15 @@ function QuestionContent() {
     } catch (e) { console.error(e); }
   }
 
+  function cleanAIText(text: string): string {
+    return text
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      .replace(/#{1,3}\s/g, "")
+      .replace(/`/g, "")
+      .trim();
+  }
+
   async function askAI() {
     if (aiLoading || aiExplanation) return;
     setAiLoading(true);
@@ -79,7 +101,7 @@ function QuestionContent() {
         })
       });
       const data = await res.json();
-      setAiExplanation(data.text);
+      setAiExplanation(cleanAIText(data.text));
     } catch (e) {
       setAiExplanation("\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u044F \u043A AI. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 \u043F\u043E\u0437\u0436\u0435.");
     }
@@ -93,7 +115,7 @@ function QuestionContent() {
   const total = answered.length;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "var(--bg)", overflow: "auto" }}>
+    <div ref={scrollRef} style={{ position: "fixed", inset: 0, zIndex: 50, background: "var(--bg)", overflow: "auto", WebkitOverflowScrolling: "touch" }}>
       <div style={{ position: "absolute", top: -60, right: -40, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, var(--jade-g) 0%, transparent 70%)", opacity: 0.5, pointerEvents: "none" }} />
 
       <div style={{ maxWidth: 430, margin: "0 auto", padding: "20px 20px 40px", position: "relative", zIndex: 1 }}>
@@ -180,7 +202,7 @@ function QuestionContent() {
                 background: aiLoading
                   ? "var(--dim)"
                   : "linear-gradient(135deg, var(--royal), #6C3CE0)",
-                color: "white", fontWeight: 800, fontSize: 14,
+                color: aiLoading ? "var(--mid)" : "white", fontWeight: 800, fontSize: 14,
                 fontFamily: "'Outfit', sans-serif", cursor: aiLoading ? "default" : "pointer",
                 boxShadow: aiLoading ? "none" : "0 8px 24px rgba(88,64,198,0.35)",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
@@ -201,26 +223,27 @@ function QuestionContent() {
 
             {/* AI explanation */}
             {aiExplanation && (
-              <div className="animate-in" style={{
-                background: "linear-gradient(135deg, rgba(88,64,198,0.06), rgba(26,122,104,0.04))",
+              <div ref={aiRef} className="animate-in" style={{
+                background: "var(--card)",
                 borderRadius: 22, padding: 20, marginBottom: 12,
-                border: "2px solid rgba(88,64,198,0.12)",
+                border: "2px solid rgba(88,64,198,0.15)",
                 position: "relative", overflow: "hidden",
               }}>
-                <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, borderRadius: "50%", background: "rgba(88,64,198,0.05)", pointerEvents: "none" }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, position: "relative" }}>
+                {/* Decorative accent line */}
+                <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: "linear-gradient(180deg, var(--royal), #6C3CE0)", borderRadius: "4px 0 0 4px" }} />
+
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, paddingLeft: 8 }}>
                   <div style={{
                     width: 36, height: 36, borderRadius: 12,
                     background: "linear-gradient(135deg, var(--royal), #6C3CE0)",
                     display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18,
-                    boxShadow: "0 4px 12px rgba(88,64,198,0.3)",
+                    boxShadow: "0 4px 12px rgba(88,64,198,0.25)",
                   }}>{"\u{1F916}"}</div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: "var(--royal)" }}>AI {"\u0422\u044C\u044E\u0442\u043E\u0440"}</p>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "var(--pale)" }}>{"\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u0431\u044A\u044F\u0441\u043D\u0435\u043D\u0438\u0435"}</p>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: "var(--royal)" }}>AI {"\u0422\u044C\u044E\u0442\u043E\u0440"}</p>
                   </div>
                 </div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", lineHeight: 1.7, position: "relative" }}>
+                <p style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", lineHeight: 1.75, paddingLeft: 8 }}>
                   {aiExplanation}
                 </p>
               </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -118,7 +118,7 @@ function QuestionContent() {
     <div ref={scrollRef} style={{ position: "fixed", inset: 0, zIndex: 50, background: "var(--bg)", overflow: "auto", WebkitOverflowScrolling: "touch" }}>
       <div style={{ position: "absolute", top: -60, right: -40, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, var(--jade-g) 0%, transparent 70%)", opacity: 0.5, pointerEvents: "none" }} />
 
-      <div style={{ maxWidth: 430, margin: "0 auto", padding: "20px 20px 40px", position: "relative", zIndex: 1 }}>
+      <div style={{ maxWidth: 430, margin: "0 auto", padding: "20px 20px 140px", position: "relative", zIndex: 1 }}>
         {/* Top bar */}
         <div className="animate-in" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <button className="hover-lift" onClick={() => router.back()} style={{

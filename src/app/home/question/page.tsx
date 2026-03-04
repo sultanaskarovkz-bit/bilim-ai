@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -61,6 +61,15 @@ function QuestionContent() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        // Save answer to user_answers
+        await supabase.from("user_answers").insert({
+          user_id: session.user.id,
+          question_id: question.id,
+          selected_index: index,
+          is_correct: isCorrect,
+          time_spent_seconds: timer,
+        });
+        // Update profile stats
         const { data: profile } = await supabase.from("profiles").select("total_xp, tasks_today").eq("id", session.user.id).single();
         if (profile) {
           await supabase.from("profiles").update({
@@ -241,6 +250,7 @@ function QuestionContent() {
                   }}>{"\u{1F916}"}</div>
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 800, color: "var(--royal)" }}>AI {"\u0422\u044C\u044E\u0442\u043E\u0440"}</p>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: "var(--pale)" }}>{"\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u043E\u0435 \u043E\u0431\u044A\u044F\u0441\u043D\u0435\u043D\u0438\u0435"}</p>
                   </div>
                 </div>
                 <p style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", lineHeight: 1.75, paddingLeft: 8 }}>
